@@ -787,6 +787,10 @@ void QgsFieldsProperties::on_mEditorLayoutComboBox_currentIndexChanged( int inde
       mAttributeEditorOptionsWidget->setVisible( true );
       mAttributeEditorOptionsWidget->setCurrentIndex( 0 );
       break;
+
+    case 3:
+      mAttributeEditorOptionsWidget->setVisible( false );
+      break;
   }
 }
 

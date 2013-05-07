@@ -406,7 +406,8 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
     {
       GeneratedLayout = 0,
       TabLayout = 1,
-      UiFileLayout = 2
+      UiFileLayout = 2,
+      DBLayout = 3
     };
 
     enum EditType
@@ -735,7 +736,11 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
      */
     virtual QString loadNamedStyle( const QString theURI, bool &theResultFlag );
 
-    virtual bool applyNamedStyle(QString namedStyle , QString errorMsg);
+    virtual bool applyNamedStyle( QString namedStyle , QString errorMsg );
+
+    void loadEditorLayoutUIFromDatabase( QString rowID, QString& errorMsg );
+
+    QString editorLayoutUI();
 
     /** convert a saved attribute editor element into a AttributeEditor structure as it's used internally.
      * @param elem the DOM element
@@ -1492,6 +1497,8 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
 
     /** Defines the default layout to use for the attribute editor (Drag and drop, UI File, Generated) */
     EditorLayout mEditorLayout;
+
+    QString mEditorLayoutUI;
 
     QString mEditForm, mEditFormInit;
     //annotation form for this layer

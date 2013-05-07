@@ -3490,3 +3490,59 @@ QGISEXTERN QString getStyleById( const QString& uri, QString styleId, QString& e
     return "";
   }
 }
+
+QGISEXTERN QString getEditoryLayoutUI( const QString& uri, QString styleId, QString& errCause)
+{
+    QgsDataSourceURI dsUri( uri );
+
+    QgsPostgresConn *conn = QgsPostgresConn::connectDb( dsUri.connectionInfo(), false );
+    if ( !conn )
+    {
+      errCause = QObject::tr( "Connection to database failed using username: %1" ).arg( dsUri.username() );
+      return QObject::tr( "" );
+    }
+
+    QString selectUIQuery = QString( "SELECT ui FROM layer_styles ");
+    QString whereClause;
+
+    if ( styleId.compare( "" ) )
+    {
+        whereClause = QString( " WHERE id=%1" ).arg( QgsPostgresConn::quotedValue( styleId ) );
+    }
+    else
+    {
+        whereClause = QString( " WHERE f_table_catalog=%1"
+                               " AND f_table_schema=%2"
+                               " AND f_table_name=%3"
+                               " AND f_geometry_column=%4"
+                               " AND useAsDefault=true;" )
+                           .arg( QgsPostgresConn::quotedValue( dsUri.database() ) )
+                           .arg( QgsPostgresConn::quotedValue( dsUri.schema() ) )
+                           .arg( QgsPostgresConn::quotedValue( dsUri.table() ) )
+                           .arg( QgsPostgresConn::quotedValue( dsUri.geometryColumn() ) );
+    }
+
+    selectUIQuery = selectUIQuery.append( whereClause );
+
+    QgsPostgresResult result = conn->PQexec( selectUIQuery );
+    if ( result.PQresultStatus() != PGRES_TUPLES_OK )
+    {
+      QgsMessageLog::logMessage( QObject::tr( "Error executing query: %1" ).arg( selectUIQuery ) );
+      errCause = QObject::tr( "Error executing the select query. The query was logged" );
+      return "";
+    }
+
+    switch ( result.PQntuples() )
+    {
+        case 1:
+            return result.PQgetvalue( 0, 0 );
+            break;
+        case 0:
+            return "";
+            break;
+        default:
+            errCause = QObject::tr( "Consistency error in table layer_styles Style id should be unique" );
+            return "";
+            break;
+    }
+}

@@ -110,6 +110,12 @@ typedef QString getStyleById_t(
   QString& errCause
 );
 
+typedef QString getEditorLayout_t(
+  const QString& uri,
+  QString styleID,
+  QString& errCause
+);
+
 
 QgsVectorLayer::QgsVectorLayer( QString vectorLayerPath,
                                 QString baseName,
@@ -3771,7 +3777,10 @@ QString QgsVectorLayer::getStyleFromDatabase( QString styleId, QString &msgError
     return QObject::tr( "" );
   }
 
-  return getStyleByIdMethod( mDataSource, styleId, msgError );
+  QString style = getStyleByIdMethod( mDataSource, styleId, msgError );
+  this->loadEditorLayoutUIFromDatabase( styleId, msgError );
+
+  return style;
 }
 
 
@@ -3839,6 +3848,7 @@ QString QgsVectorLayer::loadNamedStyle( const QString theURI, bool &theResultFla
         if ( !qml.isEmpty() )
         {
           theResultFlag = this->applyNamedStyle( qml, errorMsg );
+          this->loadEditorLayoutUIFromDatabase( "", errorMsg );
         }
       }
     }
@@ -3880,4 +3890,29 @@ bool QgsVectorLayer::applyNamedStyle( QString namedStyle, QString errorMsg )
 #endif
 
   return readSymbology( myRoot, errorMsg );
+}
+
+void QgsVectorLayer::loadEditorLayoutUIFromDatabase( QString rowID, QString& errorMsg )
+{
+    QgsProviderRegistry * pReg = QgsProviderRegistry::instance();
+    QLibrary *myLib = pReg->providerLibrary( mProviderKey );
+    if ( !myLib )
+    {
+      errorMsg = QObject::tr( "Unable to load %1 provider" ).arg( mProviderKey );
+    }
+    getEditorLayout_t* getEditoryLayoutUIMethod = ( getEditorLayout_t * ) cast_to_fptr( myLib->resolve( "getEditoryLayoutUI" ) );
+
+    if ( !getEditoryLayoutUIMethod )
+    {
+      delete myLib;
+      errorMsg = QObject::tr( "Provider %1 has no %2 method" ).arg( mProviderKey ).arg( "getEditoryLayoutUI" );
+    }
+
+    mEditorLayoutUI = getEditoryLayoutUIMethod( mDataSource, rowID, errorMsg );
+    mEditorLayout = QgsVectorLayer::DBLayout;
+}
+
+QString QgsVectorLayer::editorLayoutUI()
+{
+    return mEditorLayoutUI;
 }

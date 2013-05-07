@@ -64,7 +64,17 @@ QgsAttributeDialog::QgsAttributeDialog( QgsVectorLayer *vl, QgsFeature *thepFeat
 
   QDialogButtonBox *buttonBox = NULL;
 
-  if ( vl->editorLayout() == QgsVectorLayer::UiFileLayout && !vl->editForm().isEmpty() )
+  if ( vl->editorLayout() == QgsVectorLayer::DBLayout && !vl->editorLayoutUI().isNull() && vl->editorLayoutUI().compare( "" ) )
+  {
+    //UI file is in db
+    QUiLoader loader;
+    QByteArray ba = vl->editorLayoutUI().toUtf8();
+    QBuffer buffer( &ba );
+    QWidget *myWidget = loader.load( &buffer, parent );
+    mDialog = qobject_cast<QDialog*>( myWidget );
+    buttonBox = myWidget->findChild<QDialogButtonBox*>();
+  }
+  else if ( vl->editorLayout() == QgsVectorLayer::UiFileLayout && !vl->editForm().isEmpty() )
   {
     // UI-File defined layout
     QFile file( vl->editForm() );
