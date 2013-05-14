@@ -376,6 +376,20 @@ struct CORE_EXPORT QgsVectorJoinInfo
  *   Defines the coordinate reference system used for the layer.  This can be
  *   any string accepted by QgsCoordinateReferenceSystem::createFromString()
  *
+ * -subsetIndex=(yes|no)
+ *
+ *   Determines whether the provider generates an index to improve the efficiency
+ *   of subsets.  The default is yes
+ *
+ * -spatialIndex=(yes|no)
+ *
+ *   Determines whether the provider generates a spatial index.  The default is no.
+ *
+ * -useWatcher=(yes|no)
+ *
+ *   Defines whether the file will be monitored for changes. The default is
+ *   to monitor for changes.
+ *
  * - quiet
  *
  *   Errors encountered loading the file will not be reported in a user dialog if
@@ -707,9 +721,9 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
 
     /**
      * Lists all the style in db split into related to the layer and not related to
-     * @param ids the QVector in which will be stored the style db ids
-     * @param names the QVector in which will be stored the style names
-     * @param descriptions the QVector in which will be stored the style descriptions
+     * @param ids the list in which will be stored the style db ids
+     * @param names the list in which will be stored the style names
+     * @param descriptions the list in which will be stored the style descriptions
      * @param msgError
      * @return the number of styles related to current layer
      */
@@ -735,7 +749,7 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
      */
     virtual QString loadNamedStyle( const QString theURI, bool &theResultFlag );
 
-    virtual bool applyNamedStyle(QString namedStyle , QString errorMsg);
+    virtual bool applyNamedStyle( QString namedStyle , QString errorMsg );
 
     /** convert a saved attribute editor element into a AttributeEditor structure as it's used internally.
      * @param elem the DOM element
@@ -1213,6 +1227,24 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
       @note added in 1.7*/
     QVariant maximumValue( int index );
 
+    /* Set the blending mode used for rendering each feature
+     * @note added in 2.0
+     */
+    void setFeatureBlendMode( const QPainter::CompositionMode blendMode );
+    /* Returns the current blending mode for features
+     * @note added in 2.0
+     */
+    QPainter::CompositionMode featureBlendMode() const;
+    
+    /* Set the transparency for the vector layer
+     * @note added in 2.0
+     */
+    void setLayerTransparency( int layerTransparency );
+    /* Returns the current transparency for the vector layer
+     * @note added in 2.0
+     */
+    int layerTransparency() const;    
+
   public slots:
     /**
      * Select feature by its ID
@@ -1466,6 +1498,12 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
 
     /** Display labels */
     bool mLabelOn;
+
+    /** Blend mode for features */
+    QPainter::CompositionMode mFeatureBlendMode;
+    
+    /** Layer transparency */
+    int mLayerTransparency;
 
     /**The current type of editing marker*/
     QgsVectorLayer::VertexMarkerType mCurrentVertexMarkerType;
